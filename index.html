@@ -417,6 +417,26 @@
       .chi-hien-khi-in { display: none !important; }
     }
   </style>
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVueYYokJdqm_uCMqBL24d6YCtMTamCM8",
+      authDomain: "csdlsongminh.firebaseapp.com",
+      databaseURL: "https://csdlsongminh-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "csdlsongminh",
+      storageBucket: "csdlsongminh.firebasestorage.app",
+      messagingSenderId: "319501136448",
+      appId: "1:319501136448:web:1c2a9a1b5582d3a9f725a5",
+      measurementId: "G-VPPH1RXD7H"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const ADMIN_EMAIL = "songminh138@gmail.com";
+  </script>
 </head>
 <body>
 
@@ -558,12 +578,28 @@
       <div class="the" id="khu-vuc-khoa">
         <div class="khoa-quan-tri">
           <div class="icon">🔒</div>
-          <p>Nhập mật khẩu quản trị để nhập điểm từ Excel hoặc khởi tạo lại cấu trúc dữ liệu.</p>
+          <p>Đăng nhập bằng tài khoản Google để truy cập tính năng Quản trị.</p>
           <div class="hang-nhap" style="justify-content:center">
-            <input type="password" id="o-mat-khau" placeholder="Mật khẩu quản trị" style="max-width:220px">
-            <button class="nut" id="nut-mo-khoa">Mở khóa</button>
+            <button class="nut" id="nut-dang-nhap-gg">Đăng nhập bằng Google</button>
           </div>
           <div id="thong-bao-khoa"></div>
+        </div>
+      </div>
+
+      <div class="the an" id="khu-vuc-user-info">
+        <div style="display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 16px;">
+          <img id="user-avatar" src="" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+          <div>
+            <div id="user-name" style="font-weight: bold; font-size: 1.1rem;"></div>
+            <div id="user-email" style="font-size: 0.9rem; color: var(--text-muted);"></div>
+          </div>
+        </div>
+        <div style="text-align: center; margin-bottom: 24px;">
+          Vai trò: <strong id="user-role" style="color: var(--primary);">Đang kiểm tra...</strong>
+        </div>
+        <div class="hang-nhap" style="justify-content:center">
+          <button class="nut vien" id="nut-dang-xuat">Đăng xuất</button>
+          <a href="admin.html" class="nut an" id="nut-link-admin" style="text-decoration: none;">Trang Quản trị Viên</a>
         </div>
       </div>
 
@@ -1302,25 +1338,66 @@
     });
   }
 
-  // ====== TAB 3: MỞ KHÓA QUẢN TRỊ ======
-  document.getElementById('nut-mo-khoa').addEventListener('click', () => {
-    const mk = document.getElementById('o-mat-khau').value;
-    if (!mk) return;
+  // ====== TAB 3: MỞ KHÓA QUẢN TRỊ (FIREBASE) ======
+  document.getElementById('nut-dang-nhap-gg').addEventListener('click', () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider).catch(err => {
+      hienThongBao('thong-bao-khoa', 'Lỗi đăng nhập: ' + err.message, 'loi');
+    });
+  });
 
-    hienThongBao('thong-bao-khoa', '', '');
-    document.getElementById('nut-mo-khoa').disabled = true;
+  document.getElementById('nut-dang-xuat').addEventListener('click', () => {
+    auth.signOut();
+  });
 
-    goiAPI('verifyPassword', { password: mk })
-      .then(() => {
-        matKhauPhien = mk;
-        document.getElementById('khu-vuc-khoa').classList.add('an');
-        document.getElementById('khu-vuc-admin').classList.remove('an');
-        document.getElementById('khu-vuc-import').classList.remove('an');
-      })
-      .catch(loi => {
-        document.getElementById('nut-mo-khoa').disabled = false;
-        hienThongBao('thong-bao-khoa', loi.message, 'loi');
-      });
+  auth.onAuthStateChanged(async (user) => {
+    if (user) {
+      document.getElementById('khu-vuc-khoa').classList.add('an');
+      document.getElementById('khu-vuc-user-info').classList.remove('an');
+      
+      document.getElementById('user-avatar').src = user.photoURL || '';
+      document.getElementById('user-name').textContent = user.displayName;
+      document.getElementById('user-email').textContent = user.email;
+
+      try {
+        const userRef = db.collection('users_sodiemonline').doc(user.uid);
+        const doc = await userRef.get();
+        
+        let role = 'viewer';
+        if (user.email === ADMIN_EMAIL) {
+          role = 'admin';
+        } else if (doc.exists && doc.data().role) {
+          role = doc.data().role;
+        }
+        
+        await userRef.set({
+          email: user.email,
+          name: user.displayName,
+          photoURL: user.photoURL,
+          role: role,
+          lastLogin: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+
+        document.getElementById('user-role').textContent = role === 'admin' ? 'Quản trị viên (Admin)' : 'Thành viên (Viewer)';
+
+        if (role === 'admin') {
+          document.getElementById('khu-vuc-admin').classList.remove('an');
+          document.getElementById('khu-vuc-import').classList.remove('an');
+          document.getElementById('nut-link-admin').classList.remove('an');
+        } else {
+          document.getElementById('khu-vuc-admin').classList.add('an');
+          document.getElementById('khu-vuc-import').classList.add('an');
+          document.getElementById('nut-link-admin').classList.add('an');
+        }
+      } catch (err) {
+        console.error("Lỗi khi kiểm tra phân quyền: ", err);
+      }
+    } else {
+      document.getElementById('khu-vuc-khoa').classList.remove('an');
+      document.getElementById('khu-vuc-user-info').classList.add('an');
+      document.getElementById('khu-vuc-admin').classList.add('an');
+      document.getElementById('khu-vuc-import').classList.add('an');
+    }
   });
 
   // ====== KHỞI TẠO DATABASE ======

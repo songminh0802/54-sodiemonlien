@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quản trị Người dùng - Sổ Điểm</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --bg-body: #f8fafc;
+      --bg-card: #ffffff;
+      --text-main: #0f172a;
+      --border: #e2e8f0;
+      --success: #10b981;
+    }
+    body { font-family: 'Inter', sans-serif; background: var(--bg-body); margin: 0; padding: 20px; color: var(--text-main); }
+    h1 { text-align: center; color: var(--primary); }
+    .container { max-width: 900px; margin: 0 auto; background: var(--bg-card); padding: 24px; border-radius: 12px; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: left; }
+    th { background: var(--bg-body); font-weight: 600; }
+    img.avatar { width: 40px; height: 40px; border-radius: 50%; vertical-align: middle; margin-right: 10px; }
+    select { padding: 8px; border-radius: 6px; border: 1px solid var(--border); font-family: inherit; }
+    .btn { background: var(--primary); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; text-decoration: none; display: inline-block; }
+    .btn:hover { background: #4338ca; }
+    .header-actions { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    #loading { text-align: center; padding: 40px; font-style: italic; color: #64748b; }
+  </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBVueYYokJdqm_uCMqBL24d6YCtMTamCM8",
+      authDomain: "csdlsongminh.firebaseapp.com",
+      databaseURL: "https://csdlsongminh-default-rtdb.asia-southeast1.firebasedatabase.app",
+      projectId: "csdlsongminh",
+      storageBucket: "csdlsongminh.firebasestorage.app",
+      messagingSenderId: "319501136448",
+      appId: "1:319501136448:web:1c2a9a1b5582d3a9f725a5",
+      measurementId: "G-VPPH1RXD7H"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    const auth = firebase.auth();
+    const ADMIN_EMAIL = "songminh138@gmail.com";
+  </script>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header-actions">
+      <a href="index.html" class="btn">← Quay lại Ứng dụng</a>
+      <h2 style="margin: 0;">Quản lý Phân quyền</h2>
+    </div>
+
+    <div id="loading">Đang tải dữ liệu...</div>
+    
+    <table id="usersTable" style="display: none;">
+      <thead>
+        <tr>
+          <th>Người dùng</th>
+          <th>Email</th>
+          <th>Vai trò hiện tại</th>
+          <th>Phân quyền</th>
+        </tr>
+      </thead>
+      <tbody id="userList"></tbody>
+    </table>
+  </div>
+
+  <script>
+    auth.onAuthStateChanged(async (user) => {
+      if (user) {
+        if (user.email === ADMIN_EMAIL) {
+          loadUsers();
+        } else {
+          const doc = await db.collection('users_sodiemonline').doc(user.uid).get();
+          if (doc.exists && doc.data().role === 'admin') {
+            loadUsers();
+          } else {
+            alert("Bạn không có quyền truy cập trang này.");
+            window.location.href = 'index.html';
+          }
+        }
+      } else {
+        window.location.href = 'index.html';
+      }
+    });
+
+    async function loadUsers() {
+      document.getElementById('loading').style.display = 'none';
+      document.getElementById('usersTable').style.display = 'table';
+      
+      const tbody = document.getElementById('userList');
+      tbody.innerHTML = '';
+
+      db.collection('users_sodiemonline').onSnapshot(snapshot => {
+        tbody.innerHTML = '';
+        snapshot.forEach(doc => {
+          const u = doc.data();
+          const tr = document.createElement('tr');
+          
+          const roleText = u.role === 'admin' ? '<span style="color:red; font-weight:bold;">Admin</span>' : 'Thành viên (Viewer)';
+          
+          let selectHtml = `
+            <select onchange="changeRole('${doc.id}', this.value)" ${u.email === ADMIN_EMAIL ? 'disabled' : ''}>
+              <option value="viewer" ${u.role === 'viewer' ? 'selected' : ''}>Thành viên</option>
+              <option value="admin" ${u.role === 'admin' ? 'selected' : ''}>Quản trị viên</option>
+            </select>
+          `;
+
+          tr.innerHTML = `
+            <td>
+              <img src="${u.photoURL || 'https://via.placeholder.com/40'}" class="avatar">
+              ${u.name || 'Không có tên'}
+            </td>
+            <td>${u.email}</td>
+            <td>${roleText}</td>
+            <td>${selectHtml}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+    }
+
+    window.changeRole = async function(uid, newRole) {
+      if (confirm(`Bạn có chắc muốn đổi quyền người này thành ${newRole}?`)) {
+        try {
+          await db.collection('users_sodiemonline').doc(uid).update({ role: newRole });
+        } catch (e) {
+          alert("Lỗi khi cập nhật quyền: " + e.message);
+        }
+      }
+    }
+  </script>
+</body>
+</html>
