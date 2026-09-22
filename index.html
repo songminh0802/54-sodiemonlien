@@ -64,6 +64,34 @@
       font-weight: 400;
     }
 
+    .header-actions-right {
+      position: absolute;
+      top: 25px;
+      right: 20px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .header-btn {
+      background: rgba(255, 255, 255, 0.2);
+      border: none;
+      color: white;
+      border-radius: 8px;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.2rem;
+      transition: background 0.2s;
+      text-decoration: none;
+    }
+
+    .header-btn:hover {
+      background: rgba(255, 255, 255, 0.3);
+    }
+
     nav.tab {
       display: flex;
       justify-content: center;
@@ -443,6 +471,10 @@
   <header class="trang">
     <h1>Sổ Điểm Điện Tử</h1>
     <p>Tra cứu và quản lý điểm học sinh theo từng kỳ</p>
+    <div class="header-actions-right">
+      <button class="header-btn" onclick="location.reload()" title="Làm mới trang">🔄</button>
+      <a href="https://docs.google.com/spreadsheets/d/1D2310sUJ6x_IXcd3NfRm2RV8YtQRZxRGQ7vbrkwfqCQ/edit" target="_blank" class="header-btn" title="Mở trang tính gốc">📊</a>
+    </div>
   </header>
 
   <nav class="tab">
