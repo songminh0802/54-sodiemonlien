@@ -448,10 +448,39 @@
   <nav class="tab">
     <button class="tab-nut dang-chon" data-tab="thong-ke">Thống kê</button>
     <button class="tab-nut" data-tab="lop">Xem theo lớp</button>
-    <button class="tab-nut" data-tab="quan-tri">Quản trị</button>
+    <button class="tab-nut an" id="tab-quan-tri" data-tab="quan-tri">Quản trị</button>
   </nav>
 
   <main>
+    <!-- KHU VỰC ĐĂNG NHẬP (GLOBAL) -->
+    <div class="the" id="khu-vuc-khoa" style="margin-bottom: 20px;">
+      <div class="khoa-quan-tri" style="padding: 20px;">
+        <p style="margin-top:0;">Đăng nhập bằng tài khoản Google để sử dụng các tính năng nâng cao.</p>
+        <div class="hang-nhap" style="justify-content:center; margin-bottom: 0;">
+          <button class="nut" id="nut-dang-nhap-gg">Đăng nhập bằng Google</button>
+        </div>
+        <div id="thong-bao-khoa"></div>
+      </div>
+    </div>
+
+    <div class="the an" id="khu-vuc-user-info" style="margin-bottom: 20px; padding: 16px;">
+      <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <img id="user-avatar" src="" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
+          <div>
+            <div id="user-name" style="font-weight: bold; font-size: 1rem;"></div>
+            <div id="user-email" style="font-size: 0.85rem; color: var(--text-muted);"></div>
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px; flex-wrap: wrap;">
+          <div style="font-size: 0.9rem;">
+            Vai trò: <strong id="user-role" style="color: var(--primary);">Đang kiểm tra...</strong>
+          </div>
+          <a href="admin.html" class="nut vien an" id="nut-link-admin" style="text-decoration: none; padding: 8px 16px; font-size: 0.85rem;">Phân quyền</a>
+          <button class="nut vien" id="nut-dang-xuat" style="padding: 8px 16px; font-size: 0.85rem;">Đăng xuất</button>
+        </div>
+      </div>
+    </div>
 
     <!-- TAB 0: THỐNG KÊ (DASHBOARD) -->
     <section id="khung-thong-ke" class="khung dang-chon">
@@ -575,33 +604,6 @@
 
     <!-- TAB 3: QUẢN TRỊ -->
     <section id="khung-quan-tri" class="khung">
-      <div class="the" id="khu-vuc-khoa">
-        <div class="khoa-quan-tri">
-          <div class="icon">🔒</div>
-          <p>Đăng nhập bằng tài khoản Google để truy cập tính năng Quản trị.</p>
-          <div class="hang-nhap" style="justify-content:center">
-            <button class="nut" id="nut-dang-nhap-gg">Đăng nhập bằng Google</button>
-          </div>
-          <div id="thong-bao-khoa"></div>
-        </div>
-      </div>
-
-      <div class="the an" id="khu-vuc-user-info">
-        <div style="display: flex; align-items: center; gap: 12px; justify-content: center; margin-bottom: 16px;">
-          <img id="user-avatar" src="" alt="Avatar" style="width: 40px; height: 40px; border-radius: 50%;">
-          <div>
-            <div id="user-name" style="font-weight: bold; font-size: 1.1rem;"></div>
-            <div id="user-email" style="font-size: 0.9rem; color: var(--text-muted);"></div>
-          </div>
-        </div>
-        <div style="text-align: center; margin-bottom: 24px;">
-          Vai trò: <strong id="user-role" style="color: var(--primary);">Đang kiểm tra...</strong>
-        </div>
-        <div class="hang-nhap" style="justify-content:center">
-          <button class="nut vien" id="nut-dang-xuat">Đăng xuất</button>
-          <a href="admin.html" class="nut an" id="nut-link-admin" style="text-decoration: none;">Trang Quản trị Viên</a>
-        </div>
-      </div>
 
       <div class="the an" id="khu-vuc-admin">
         <h3 style="margin-top:0">Khởi tạo / cập nhật cấu trúc dữ liệu</h3>
@@ -1384,10 +1386,12 @@
           document.getElementById('khu-vuc-admin').classList.remove('an');
           document.getElementById('khu-vuc-import').classList.remove('an');
           document.getElementById('nut-link-admin').classList.remove('an');
+          document.getElementById('tab-quan-tri').classList.remove('an');
         } else {
           document.getElementById('khu-vuc-admin').classList.add('an');
           document.getElementById('khu-vuc-import').classList.add('an');
           document.getElementById('nut-link-admin').classList.add('an');
+          document.getElementById('tab-quan-tri').classList.add('an');
         }
       } catch (err) {
         console.error("Lỗi khi kiểm tra phân quyền: ", err);
@@ -1397,6 +1401,7 @@
       document.getElementById('khu-vuc-user-info').classList.add('an');
       document.getElementById('khu-vuc-admin').classList.add('an');
       document.getElementById('khu-vuc-import').classList.add('an');
+      document.getElementById('tab-quan-tri').classList.add('an');
     }
   });
 
