@@ -668,7 +668,7 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script>
-  const GAS_URL = "https://script.google.com/macros/s/AKfycbxXExy1la6O6ZcPYXbRyisijIM9yklie2cz-BKMLj_R9QGAe7UdAbRopLINOi2z4W7M/exec";
+  const GAS_URL = "https://script.google.com/macros/s/AKfycbySk6r52u-e7nKUnvuOmMLUfPf7LAwpNbmz-2OgWmWiga0B2WNirYG_IKFJTkzvcKJ79A/exec";
 
   async function goiAPI(action, data = {}) {
     const res = await fetch(GAS_URL, {
@@ -1427,6 +1427,8 @@
         }
       } catch (err) {
         console.error("Lỗi khi kiểm tra phân quyền: ", err);
+        document.getElementById('user-role').textContent = 'Lỗi quyền truy cập (Rules)';
+        alert("Không thể kiểm tra phân quyền. Vui lòng kiểm tra Firestore Rules trên Firebase.\nLỗi chi tiết: " + err.message);
       }
     } else {
       document.getElementById('khu-vuc-khoa').classList.remove('an');
